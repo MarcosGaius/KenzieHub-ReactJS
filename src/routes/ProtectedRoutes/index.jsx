@@ -7,7 +7,8 @@ export default function ProtectedRoutes() {
   const { userInfo, IsFetchingUser, isTokenValid } = useContext(UserContext);
 
   if (!isTokenValid) {
-    return;
+    toast.error("Realize o login para ter acesso a essa página.");
+    return <Navigate to="/login" replace={true} />;
   }
 
   if (!IsFetchingUser && Object.keys(userInfo).length <= 0) {
