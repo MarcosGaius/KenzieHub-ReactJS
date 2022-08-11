@@ -8,7 +8,7 @@ export const LoaderWrapper = styled.div`
   align-items: center;
 
   position: fixed;
-  z-index: 2;
+  z-index: 3;
 
   width: 100%;
   height: 100vh;

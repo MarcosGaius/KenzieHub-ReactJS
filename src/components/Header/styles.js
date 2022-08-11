@@ -9,6 +9,8 @@ export const HeaderContainer = styled.div`
 
   width: 100%;
 
+  background-color: rgba(var(--grey-4), 0.5);
+
   padding: 1rem 1rem;
 
   @media screen and (min-width: 1000px) {

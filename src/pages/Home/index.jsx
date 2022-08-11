@@ -1,35 +1,19 @@
-import { toast } from "react-toastify";
-import { Navigate } from "react-router-dom";
-import { HomeWrapper, MainContent, UserDetails } from "./styles";
-import Header from "../../components/Header";
-import { useEffect, useState } from "react";
-import { getUserData } from "../../services/api";
+import { useContext } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function Home({ isTokenValid, doesTokenExistsOnLocalStorage }) {
-  const [userInfo, setUserInfo] = useState("");
+import Header from "../../components/Header";
+import Techs from "../../components/Techs";
+import { HomeWrapper, MainContent, UserDetails } from "./styles";
 
-  useEffect(() => {
-    const userId = localStorage.getItem("@kenziehub:userId");
-    try {
-      getUserData(userId).then((response) => {
-        if (response.request.status !== 200) {
-          throw response;
-        }
-        setUserInfo(response.data);
-      });
-    } catch (error) {
-      toast.error("Error ao carregar informações do usuário.", {
-        position: "bottom-right",
-      });
-      console.error(error);
-    }
-  }, []);
+import { UserContext } from "../../providers/User";
+import AddModal from "../../components/AddModal";
+import { TechContext } from "../../providers/Tech";
+import Loader from "../../components/Loader";
+import EditModal from "../../components/EditModal";
 
-  if (doesTokenExistsOnLocalStorage() === false || isTokenValid() === false) {
-    toast.info("Autentique-se para acessar o dashboard.");
-    return <Navigate to="/login" replace={true} />;
-  }
+export default function Home() {
+  const { userInfo, isLoading } = useContext(UserContext);
+  const { showCreateModal, showEditModal } = useContext(TechContext);
 
   const animationVariants = {
     hidden: { opacity: 0 },
@@ -47,34 +31,47 @@ export default function Home({ isTokenValid, doesTokenExistsOnLocalStorage }) {
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        variants={animationVariants}
-        initial="hidden"
-        animate="show"
-        exit="hidden"
-      >
-        <HomeWrapper>
-          <motion.div variants={animationChild}>
-            <Header />
-          </motion.div>
-          <motion.div variants={animationChild}>
-            <UserDetails>
-              <h2>Olá, {userInfo ? userInfo.name : "Usuário"}</h2>
-              <p>{userInfo.course_module}</p>
-            </UserDetails>
-          </motion.div>
-          <motion.div variants={animationChild}>
-            <MainContent>
-              <h2>Que pena! Estamos em desenvolvimento :(</h2>
-              <p>
-                Nossa aplicação está em desenvolvimento, em breve teremos
-                novidades 👀
-              </p>
-            </MainContent>
-          </motion.div>
-        </HomeWrapper>
-      </motion.div>
-    </AnimatePresence>
+    <>
+      {isLoading && <Loader />}
+      <AnimatePresence>
+        <motion.div variants={animationVariants} initial="hidden" animate="show" exit="hidden">
+          <HomeWrapper>
+            <AnimatePresence>
+              {showCreateModal && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                  <AddModal />
+                </motion.div>
+              )}
+              {showEditModal && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                  <EditModal />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <motion.div variants={animationChild}>
+              <Header />
+            </motion.div>
+            <motion.div variants={animationChild}>
+              <UserDetails>
+                <h2>Olá, {userInfo ? userInfo.name : "Usuário"}</h2>
+                <p>{userInfo.course_module}</p>
+              </UserDetails>
+            </motion.div>
+            <motion.div variants={animationChild}>
+              <MainContent>
+                {userInfo.techs ? (
+                  <Techs />
+                ) : (
+                  <>
+                    <h2>Carregando... 😴</h2>
+                    <p>Estamos buscando seus dados!</p>
+                  </>
+                )}
+              </MainContent>
+            </motion.div>
+          </HomeWrapper>
+        </motion.div>
+      </AnimatePresence>
+    </>
   );
 }

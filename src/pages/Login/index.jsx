@@ -1,34 +1,24 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { logUserIn } from "../../services/api";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { AnimatePresence, motion } from "framer-motion";
 
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Button from "../../components/Button";
 import Logo from "../../components/Logo";
-import {
-  FormContainer,
-  FormField,
-  LoginFormWrapper,
-  PasswordInput,
-  RegisterFieldContainer,
-} from "./styles";
 import Loader from "../../components/Loader";
 
-const schema = yup.object({
-  email: yup
-    .string()
-    .email("Insira um email válido.")
-    .required("Email é um campo obrigatório!"),
-  password: yup.string().required("Senha é um campo obrigatório!"),
-});
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { FormContainer, FormField, LoginFormWrapper, PasswordInput, RegisterFieldContainer } from "./styles";
 
-export default function Login({ isLoading, setIsLoading }) {
+import { logUserIn } from "../../services/api";
+import { UserContext } from "../../providers/User";
+import { loginSchema } from "../../validators/Login/validator";
+
+export default function Login() {
   const [shouldShowPassword, setShouldShowPassword] = useState(false);
+  const { isLoading, setIsLoading, setUserInfo } = useContext(UserContext);
   const navigate = useNavigate();
 
   const {
@@ -36,7 +26,7 @@ export default function Login({ isLoading, setIsLoading }) {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(loginSchema),
   });
 
   const handleSuccessLogin = (data) => {
@@ -44,11 +34,11 @@ export default function Login({ isLoading, setIsLoading }) {
     localStorage.setItem("@kenziehub:token", data.data.token);
     localStorage.setItem("@kenziehub:userId", data.data.user.id);
 
+    setIsLoading(false);
+    setUserInfo(data);
+    navigate("/", { replace: true });
+
     toast.success("Login bem sucedido.", {
-      onClose: () => {
-        setIsLoading(false);
-        navigate("/", { replace: true });
-      },
       position: "bottom-right",
     });
   };
@@ -58,7 +48,7 @@ export default function Login({ isLoading, setIsLoading }) {
     if (error.response.status === 401) {
       notifyMessage = "E-mail e/ou senha inválido.";
     }
-    setIsLoading((prevState) => !prevState);
+    setIsLoading(false);
     toast.error(notifyMessage);
   };
 
@@ -66,6 +56,7 @@ export default function Login({ isLoading, setIsLoading }) {
     try {
       setIsLoading(true);
       const loginResponse = await logUserIn(data);
+      console.log("~ loginResponse", loginResponse);
 
       if (loginResponse.request.status !== 200) {
         throw loginResponse;
@@ -85,11 +76,7 @@ export default function Login({ isLoading, setIsLoading }) {
     <>
       {isLoading && <Loader />}
       <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <FormContainer>
             <motion.div animate={{ scale: [1.5, 1] }}>
               <Logo />
@@ -100,48 +87,23 @@ export default function Login({ isLoading, setIsLoading }) {
                 <form onSubmit={handleSubmit(onSubmit)}>
                   <FormField>
                     <label htmlFor="email">Email</label>
-                    <input
-                      type="email"
-                      placeholder="Insira seu email"
-                      {...register("email")}
-                    />
-                    {errors.email?.message && (
-                      <small>{errors.email.message}</small>
-                    )}
+                    <input type="email" placeholder="Insira seu email" {...register("email")} />
+                    {errors.email?.message && <small>{errors.email.message}</small>}
                   </FormField>
 
                   <FormField>
                     <label htmlFor="password">Senha</label>
                     <PasswordInput>
                       {shouldShowPassword ? (
-                        <input
-                          type="text"
-                          placeholder="Insira sua senha"
-                          {...register("password")}
-                        />
+                        <input type="text" placeholder="Insira sua senha" {...register("password")} />
                       ) : (
-                        <input
-                          type="password"
-                          placeholder="Insira sua senha"
-                          {...register("password")}
-                        />
+                        <input type="password" placeholder="Insira sua senha" {...register("password")} />
                       )}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShouldShowPassword((prevState) => !prevState)
-                        }
-                      >
-                        {shouldShowPassword ? (
-                          <AiFillEyeInvisible />
-                        ) : (
-                          <AiFillEye />
-                        )}
+                      <button type="button" onClick={() => setShouldShowPassword((prevState) => !prevState)}>
+                        {shouldShowPassword ? <AiFillEyeInvisible /> : <AiFillEye />}
                       </button>
                     </PasswordInput>
-                    {errors.password?.message && (
-                      <small>{errors.password.message}</small>
-                    )}
+                    {errors.password?.message && <small>{errors.password.message}</small>}
                   </FormField>
 
                   <Button type="submit">Entrar</Button>
@@ -149,10 +111,7 @@ export default function Login({ isLoading, setIsLoading }) {
 
                 <RegisterFieldContainer>
                   <small>Ainda não possui uma conta? </small>
-                  <Button
-                    isDisabled={true}
-                    onClick={() => navigateToRegisterPage()}
-                  >
+                  <Button isDisabled={true} onClick={() => navigateToRegisterPage()}>
                     Cadastre-se
                   </Button>
                 </RegisterFieldContainer>

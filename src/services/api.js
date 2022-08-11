@@ -14,9 +14,11 @@ export const logUserIn = async (data) => {
   }
 };
 
-export const getUserData = async (id) => {
+export const getUserProfile = async (token) => {
   try {
-    const response = await kenzieHubApi.get(`/users/${id}`);
+    const response = await kenzieHubApi.get(`/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response;
   } catch (e) {
     return e;
@@ -26,6 +28,49 @@ export const getUserData = async (id) => {
 export const registerUser = async (data) => {
   try {
     const response = await kenzieHubApi.post("/users", data);
+    return response;
+  } catch (e) {
+    return e;
+  }
+};
+
+export const createTech = async (data, token) => {
+  try {
+    const response = await kenzieHubApi.post(
+      "/users/techs",
+      { ...data },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response;
+  } catch (e) {
+    return e;
+  }
+};
+
+export const updateTech = async (id, data, token) => {
+  try {
+    const response = await kenzieHubApi.put(
+      `/users/techs/${id}`,
+      { ...data },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response;
+  } catch (e) {
+    return e;
+  }
+};
+
+export const deleteTech = async (id, token) => {
+  try {
+    const response = await kenzieHubApi.delete(`/users/techs/${id}`, { headers: { Authorization: `Bearer ${token}` } });
     return response;
   } catch (e) {
     return e;

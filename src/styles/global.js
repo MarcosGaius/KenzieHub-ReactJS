@@ -73,6 +73,10 @@ export const GlobalStyle = createGlobalStyle`
       color: rgb(var(--grey-0));
     }
 
+    input:disabled {
+      color: rgb(var(--grey-1));
+    }
+
     label {
       font-size: 0.8rem;
       font-weight: 400;
